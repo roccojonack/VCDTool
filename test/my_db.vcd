@@ -1,0 +1,56 @@
+$date
+     Nov 22, 2021       12:00:46
+$end
+
+$version
+ SystemC 2.3.3-Accellera --- Oct  9 2021 23:39:45
+$end
+
+$timescale
+     1 ps
+$end
+
+$scope module SystemC $end
+$var wire    1  aaaaa  active       $end
+$var wire   32  aaaab  wtt_outstanding_counter [31:0]  $end
+$var wire   32  aaaac  rtt_outstanding_counter [31:0]  $end
+$var wire   64  aaaad  hit_counter [63:0]  $end
+$var wire   64  aaaae  miss_counter [63:0]  $end
+$var wire   64  aaaaf  evict_counter [63:0]  $end
+$var wire   64  aaaag  valid_counter [63:0]  $end
+$var wire   64  aaaah  sp_counter [63:0]  $end
+$var wire    1  aaaai  RstN       $end
+$var wire    1  aaaaj  Rst       $end
+$upscope $end
+$enddefinitions  $end
+
+$comment
+All initial values are dumped below at time 0 sec = 0 timescale units.
+$end
+
+$dumpvars
+0aaaaa
+b0 aaaab
+b0 aaaac
+b0 aaaad
+b0 aaaae
+b0 aaaaf
+b0 aaaag
+b0 aaaah
+0aaaai
+1aaaaj
+$end
+
+#10000
+1aaaai
+0aaaaj
+
+#17000
+b1 aaaae
+b1 aaaah
+
+#20000
+b10 aaaae
+b10 aaaah
+
+#1000000000
