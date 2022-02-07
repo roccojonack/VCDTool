@@ -14,4 +14,5 @@ go to build and do
 change to cmake
 make verilog-vcd-parser a subproject
 preprocessing of VCD to remore : from name string
-seting tests
+setting up tests
+switch to program options based command line parsing

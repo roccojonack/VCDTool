@@ -28,6 +28,8 @@ int main (int argc, char** argv)
     //    std::cout << "Version:  0.1\nGit HEAD: "  << gitversion << std::endl;
 
     std::string infile (result["positional"].as<std::vector<std::string>>().back());
+    std::string outfile ("tmp_patched.vcd");
+    clean_signal_names(infile, outfile);
 
     VCDFileParser parser;
 
@@ -37,7 +39,7 @@ int main (int argc, char** argv)
     if (result.count("end"))
         parser.end_time = result["end"].as<VCDTime>();
 
-    VCDFile * trace = parser.parse_file(infile);
+    VCDFile * trace = parser.parse_file(outfile);
     bool instances = result["instances"].as<bool>();
     bool fullpath = result["fullpath"].as<bool>();
 

@@ -11,7 +11,7 @@ VCD_SRC         ?= $(SRC_DIR)/VCDFile.cpp \
 
 VCD_PARSER        ?= $(BUILD_DIR)/vcd-parse
 
-VCDTOOL        ?= $(BUILD_DIR)//vcdtool
+VCDTOOL        ?= $(BUILD_DIR)/vcdtool
 VCDTOOL_SRC    ?= $(SRC_DIR)/vcdtool.cpp \
 					$(SRC_DIR)/main.cpp 
 VCDTOOL_OBJ     = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(VCDTOOL_SRC))
@@ -19,7 +19,7 @@ VCDTOOL_OBJ     = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(VCDTOOL_SRC))
 all : $(VCDTOOL)
 
 $(BUILD_DIR)/%.o : $(SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ -c $^
 
 $(VCDTOOL) : $(VCDTOOL_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ -lverilog-vcd-parser -L$(DEP_PATH) 
