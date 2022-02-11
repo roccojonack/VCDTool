@@ -33,15 +33,22 @@ void traverse_scope(std::string parent, VCDFile * trace, VCDScope * scope, bool 
     if (filterVector.size()) {
         foundScope = false;
         for (auto i : filterVector) {
-            if (i==local_parent) {
+            std::regex name_re("^"+i+"(.*)");
+            std::smatch m; 
+            if (std::regex_search(local_parent, m, name_re)) {
                 foundScope = true;
                 break;
             }
         }
     }
-    if (instances) 
-        if (foundScope) 
-            std::cout << "Scope: " << local_parent  << std::endl;
+    if (instances) {
+        if (foundScope) {
+            std::cout << "Scope: " << local_parent  << " : " << foundScope << std::endl;
+        }
+        else {
+            std::cout << "no match on Scope: " << local_parent << std::endl;
+        }
+    }        
     
     if (fullpath) {
         if (foundScope) {
@@ -50,8 +57,11 @@ void traverse_scope(std::string parent, VCDFile * trace, VCDScope * scope, bool 
             else
                 print_stat_signals(trace, scope, local_parent);
         }
-
+        else {
+            std::cout << "no match on Scope: " << local_parent << std::endl;
+        }
     }
+
     for (auto child : scope->children)
         traverse_scope(local_parent, trace, child, instances, fullpath, stats, filterVector);
 }
@@ -174,7 +184,7 @@ bool readFilter(std::string inFile, std::vector<std::string>& myVector)
     {
         std::ifstream ifs (inFile, std::ifstream::in);
         std::string myString;
-        std::cout << "opening inFile" << std::endl;
+        std::cout << "opening file " << inFile << std::endl;
         while (std::getline(ifs, myString)) {
             myVector.push_back(myString);
         };

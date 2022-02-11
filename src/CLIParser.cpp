@@ -51,7 +51,7 @@ void CLIParser::build() {
     // clang-format off
     desc.add_options()
             ("help,h",              "Print help message")
-            ("verbose,v",   po::value<int>()->implicit_value(3), "Sets logging verbosity (0=NONE, 1=FATAL, 2=ERROR, 3=WARN, 4=INFO, 5=DEBUG, 6=TRACE)")
+            //("verbose,v",   po::value<int>()->default_value(3), "Sets logging verbosity (0=NONE, 1=FATAL, 2=ERROR, 3=WARN, 4=INFO, 5=DEBUG, 6=TRACE)")
             ("trace,t",             "enable tracing")
             ("instances,i",         "Show only instances")
             ("header",              "Show header")

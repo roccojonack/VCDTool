@@ -18,17 +18,12 @@ int main (int argc, char** argv)
         std::cout << "preprocessing of "  <<  infile << std::endl;
         clean_signal_names(infile, outfile);
     }
-    VCDFileParser parser;
 
-    //if (result.count("start"))
-    //    parser.start_time = result["start"].as<VCDTime>();
-
-    //if (result.count("end"))
-    //    parser.end_time = result["end"].as<VCDTime>();
     if (!outfile.size()) {
         std::cout << "no file to parse; finishing up" << std::endl;
         return 0;
-    };
+    };    
+    VCDFileParser parser;
     std::cout << "parsing of " << outfile << std::endl;
     VCDFile *trace = parser.parse_file(outfile);
     std::cout << "parsing of " << outfile << " done" << std::endl;
@@ -39,10 +34,8 @@ int main (int argc, char** argv)
     std::string file = CLISingleton->get<std::string>("file");
     readFilter(file, filterVector);
 
-    if (trace)
-    {
-        if (CLISingleton->is_set("header"))
-        {
+    if (trace) {
+        if (CLISingleton->is_set("header")) {
             std::cout << "Version:       " << trace->version << std::endl;
             std::cout << "Comment:       " << trace->comment << std::endl;
             std::cout << "Date:          " << trace->date << std::endl;
