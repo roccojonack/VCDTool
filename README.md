@@ -8,11 +8,10 @@ go to build and do
 
 # testing
 ./vcdtool -h
-./vcdtool -u ../test/my_db.vcd
+./vcdtool -u --VCD ../test/my_db.vcd
 
 # todo
 change to cmake
 make verilog-vcd-parser a subproject
-preprocessing of VCD to remore : from name string
 setting up tests
-switch to program options based command line parsing
+adding boost time for profiling

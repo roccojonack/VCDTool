@@ -1,5 +1,7 @@
-#include "cxxopts.hpp"
+//#include "cxxopts.hpp"
+#include "CLIParser.h"
 #include "vcdtool.h"
+#include <vector>
 
 /*!
 @brief Standalone test function to allow testing of the VCD file parser.
@@ -7,57 +9,55 @@
 int main (int argc, char** argv)
 {
 
-    cxxopts::Options options("vcdtoggle", "Count number of signal toggles in VCD file");
-    options.add_options()
-        ("h,help", "show help message")
-        ("v,version", "Show version")
-        ("i,instances", "Show only instances")
-        ("r,header", "Show header")
-        ("u,fullpath", "Show full signal path")
-        ("s,start", "Start time (default to 0)", cxxopts::value<VCDTime>())
-        ("e,end", "End time (default to end of file)", cxxopts::value<VCDTime>())
-        ("f,file", "filename containing scopes and signal name regex", cxxopts::value<std::string>())
-        ("positional", "Positional pareameters", cxxopts::value<std::vector<std::string>>())
-    ;
-    options.parse_positional({"positional"});
-    auto result = options.parse(argc, argv);
+    CLIParser *CLISingleton = new CLIParser(argc, argv);
 
-    if (result["help"].as<bool>())
-        std::cout << options.help() << std::endl;
-    //if (result["version"].as<bool>())
-    //    std::cout << "Version:  0.1\nGit HEAD: "  << gitversion << std::endl;
-
-    std::string infile (result["positional"].as<std::vector<std::string>>().back());
-    std::string outfile ("tmp_patched.vcd");
-    clean_signal_names(infile, outfile);
-
+    std::string infile (CLISingleton->get<std::string>("VCD"));
+    std::string outfile (infile);
+    if (CLISingleton->is_set("preprocessing")) {
+        outfile = "tmp_patched.vcd";
+        std::cout << "preprocessing of "  <<  infile << std::endl;
+        clean_signal_names(infile, outfile);
+    }
     VCDFileParser parser;
 
-    if (result.count("start"))
-        parser.start_time = result["start"].as<VCDTime>();
+    //if (result.count("start"))
+    //    parser.start_time = result["start"].as<VCDTime>();
 
-    if (result.count("end"))
-        parser.end_time = result["end"].as<VCDTime>();
+    //if (result.count("end"))
+    //    parser.end_time = result["end"].as<VCDTime>();
+    if (!outfile.size()) {
+        std::cout << "no file to parse; finishing up" << std::endl;
+        return 0;
+    };
+    std::cout << "parsing of " << outfile << std::endl;
+    VCDFile *trace = parser.parse_file(outfile);
+    std::cout << "parsing of " << outfile << " done" << std::endl;
+    bool instances = CLISingleton->is_set("instances");
+    bool fullpath = CLISingleton->is_set("fullpath");
+    bool stats = CLISingleton->is_set("stats");
+    std::vector<std::string> filterVector;
+    std::string file = CLISingleton->get<std::string>("file");
+    readFilter(file, filterVector);
 
-    VCDFile * trace = parser.parse_file(outfile);
-    bool instances = result["instances"].as<bool>();
-    bool fullpath = result["fullpath"].as<bool>();
-
-    if (trace) {
-        if (result["header"].as<bool>()) {
-            std::cout << "Version:       " << trace -> version << std::endl;
-            std::cout << "Comment:       " << trace -> comment << std::endl;
-            std::cout << "Date:          " << trace -> date << std::endl;
-            std::cout << "Signal count:  " << trace -> get_signals() -> size() <<std::endl;
-            std::cout << "Times Recorded:" << trace -> get_timestamps() -> size() << std::endl;
+    if (trace)
+    {
+        if (CLISingleton->is_set("header"))
+        {
+            std::cout << "Version:       " << trace->version << std::endl;
+            std::cout << "Comment:       " << trace->comment << std::endl;
+            std::cout << "Date:          " << trace->date << std::endl;
+            std::cout << "Signal count:  " << trace->get_signals()->size() << std::endl;
+            std::cout << "Times Recorded:" << trace->get_timestamps()->size() << std::endl;
             if (fullpath)
                 std::cout << "Hash\tToggles\tFull signal path\n";
-        }    
+        }
         // Print out every signal in every scope.
-        traverse_scope(std::string(""), trace, trace->root_scope, instances, fullpath);
+        std::cout << "scope traversal of " << outfile << std::endl;
+        traverse_scope(std::string(""), trace, trace->root_scope, instances, fullpath, stats, filterVector);
 
         delete trace;
-        
+
+        std::cout << "finishing up" << std::endl;
         return 0;
     } else {
         std::cout << "Parse Failed." << std::endl;
