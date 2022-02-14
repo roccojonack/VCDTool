@@ -14,4 +14,4 @@ go to build and do
 change to cmake
 make verilog-vcd-parser a subproject
 setting up tests
-adding boost time for profiling
+add JSON for output formating

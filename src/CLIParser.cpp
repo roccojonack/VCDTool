@@ -61,6 +61,7 @@ void CLIParser::build() {
             ("start,s",     po::value<double>()->default_value(0),      "Start time (default to 0)")
             ("end,e",       po::value<double>()->default_value(-1),         "End time (default to end of file/-1)")
             ("file,f",      po::value<std::string>()->default_value(""),    "filename containing scopes and signal name regex")
+            ("outputdirectory,o",      po::value<std::string>()->default_value(""),    "directory with outputfiles")
             ("VCD",         po::value<std::string>()->default_value(""),    "VCD input file")
         ;
     // clang-format on

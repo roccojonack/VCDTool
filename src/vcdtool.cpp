@@ -3,27 +3,25 @@
 #include "vcdtool.h"
 #include <numeric>
 
-void print_scope_signals(VCDFile * trace, VCDScope * scope, std::string local_parent)
+void print_scope_signals(VCDFile * trace, VCDScope * scope, std::string local_parent, std::ostream& output)
 {
     for(VCDSignal * signal : scope -> signals) {
-        if(signal -> size > 1) {
-            std::cout << '\t'<< *std::max_element((trace->get_signal_values(signal -> hash))->begin(), (trace->get_signal_values(signal -> hash))->end()) ;
-            std::cout << '\t'<< *std::min_element((trace->get_signal_values(signal -> hash))->begin(), (trace->get_signal_values(signal -> hash))->end()) ;
-        }
-        std::cout << signal -> hash << "\t" << trace->get_signal_values(signal -> hash)->size() << "\t"
+        output << signal -> hash << "\t" << trace->get_signal_values(signal -> hash)->size() << "\t"
                     << local_parent << "." << signal -> reference;
         if(signal -> size > 1) {
-            std::cout << "[" << signal -> lindex << ":" << signal -> rindex << "]";
+            output << "[" << signal -> lindex << ":" << signal -> rindex << "]";
         } else if (signal -> lindex >= 0) {
-            std::cout << "[" << signal -> lindex << "]";
+             output<< "[" << signal -> lindex << "]";
         }
         
-        std::cout << std::endl;
+        output << std::endl;
 
     }
 }
 
-void traverse_scope(std::string parent, VCDFile * trace, VCDScope * scope, bool instances, bool fullpath, bool stats, std::vector<std::string> filterVector)
+void traverse_scope(std::string parent, VCDFile * trace, VCDScope * scope, 
+                bool instances, bool fullpath, bool stats, 
+                std::vector<std::string> filterVector, std::ostream& output)
 {
     std::string local_parent = parent;
     bool foundScope = true;
@@ -43,31 +41,32 @@ void traverse_scope(std::string parent, VCDFile * trace, VCDScope * scope, bool 
     }
     if (instances) {
         if (foundScope) {
-            std::cout << "Scope: " << local_parent  << " : " << foundScope << std::endl;
+             output << "Scope: " << local_parent << std::endl;
         }
         else {
-            std::cout << "no match on Scope: " << local_parent << std::endl;
+            output << "no match on Scope: " << local_parent << std::endl;
         }
     }        
     
     if (fullpath) {
         if (foundScope) {
             if (stats)
-                print_scope_signals(trace, scope, local_parent);
+                print_stat_signals(trace, scope, local_parent, output);
             else
-                print_stat_signals(trace, scope, local_parent);
+                print_scope_signals(trace, scope, local_parent, output);
         }
         else {
-            std::cout << "no match on Scope: " << local_parent << std::endl;
+            output << "no match on Scope: " << local_parent << std::endl;
         }
     }
 
     for (auto child : scope->children)
-        traverse_scope(local_parent, trace, child, instances, fullpath, stats, filterVector);
+        traverse_scope(local_parent, trace, child, instances, fullpath, stats, filterVector, output);
 }
 
-void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_parent)
+void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_parent, std::ostream& output)
 {
+
     double end_time = trace->get_timestamps()->back();
     for (VCDSignal *signal : scope->signals)
     {
@@ -82,7 +81,7 @@ void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_par
             current_time  = (*i)->time;
             if (Values.size()) {
                 WeightedValues.push_back(Values.back()*(current_time-previous_time));
-                // std::cout << "\t dbg" <<  Values.back() << " " << (current_time-previous_time);
+                // output << "\t dbg" <<  Values.back() << " " << (current_time-previous_time);
                 if (HistValues.find(Values.back())!=HistValues.end()) {
                     HistValues[Values.back()] += (current_time - previous_time);
                 }
@@ -108,34 +107,38 @@ void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_par
                 Values.push_back(std::stoi(fullVector, nullptr, 2));
                 break;
             case (VCD_REAL):
-                std::cout << val -> get_value_real();
+                output << val -> get_value_real();
                 break;
             default:
                 break;
             }
         }
         WeightedValues.push_back(Values.back()*(end_time-previous_time));
-        //std::cout << "\t dbg" <<  Values.back() << " " << (end_time-previous_time);
+        //output << "\t dbg" <<  Values.back() << " " << (end_time-previous_time);
         if (HistValues.find(Values.back())!=HistValues.end()) {
             HistValues[Values.back()] += (end_time - previous_time);
         }
         else {
             HistValues[Values.back()] = (end_time - previous_time);
         }
-        std::cout << '\t'<< *std::max_element(Values.begin(), Values.end()) ;
-        std::cout << '\t'<< *std::min_element(Values.begin(), Values.end()) ;
+        output << "\tmax:" << *std::max_element(Values.begin(), Values.end()) ;
+        output << "\tmin:" << *std::min_element(Values.begin(), Values.end()) ;
         float average = accumulate( WeightedValues.begin(), WeightedValues.end(), 0) / end_time;
-        std::cout << '\t'<< average;
-        std::cout << "\t" <<signal -> hash 
-                << "\t" << trace->get_signal_values(signal -> hash)->size()
-                << "\t" << local_parent << "." << signal -> reference;
+        output << "\thistogram:";
+        for (auto i:HistValues) {
+            output << i.first << "/" << i.second << ";";
+        }
+        output << "\taverage:" << average;
+        output << "\tkey:" <<signal -> hash 
+                << "\tsize:" << trace->get_signal_values(signal -> hash)->size()
+                << "\tname:" << local_parent << "." << signal -> reference;
         if(signal -> size > 1) {
-            std::cout << "[" << signal -> lindex << ":" << signal -> rindex << "]";
+            output << "[" << signal -> lindex << ":" << signal -> rindex << "]";
         } else if (signal -> lindex >= 0) {
-            std::cout << "[" << signal -> lindex << "]";
+            output << "[" << signal -> lindex << "]";
         }
         
-        std::cout << std::endl;
+        output << std::endl;
     }
 }
 
