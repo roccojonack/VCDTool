@@ -22,7 +22,7 @@ $(BUILD_DIR)/%.o : $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $^
 
 $(VCDTOOL) : $(VCDTOOL_OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ -lboost_program_options  $^ -lboost_program_options -lboost_timer -lverilog-vcd-parser -L$(DEP_PATH) -L/scratch/rocco/workarea/tools/boost_1_70_0-gcc-6.3.0-install/lib
+	$(CXX) $(CXXFLAGS) -o $@ -lboost_program_options  $^ -Wl,-rpath -Wl,/scratch/rocco/workarea/tools/boost_1_70_0-gcc-6.3.0-install/lib -lboost_program_options -lboost_timer -lverilog-vcd-parser -L$(DEP_PATH) -L/scratch/rocco/workarea/tools/boost_1_70_0-gcc-6.3.0-install/lib
 
 clean:
 	rm -rf $(VCDTOOL) $(VCDTOOL_OBJ)
