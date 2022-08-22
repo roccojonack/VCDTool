@@ -7,7 +7,6 @@
 
 #include "CLIParser.h"
 //#include <scc/report.h>
-//#include "scc/report.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -36,15 +35,6 @@ CLIParser::CLIParser(int argc, char* argv[])
         std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
         std::cerr << desc << std::endl;
     }
-    //if(vm_.count("verbose")) { // NONE, FATAL, ERROR, WARNING, INFO, DEBUG, TRACE
-        //auto log_level = std::min(6, vm_["verbose"].as<int>());
-        //sc_report_handler::set_actions(SC_ID_MORE_THAN_ONE_SIGNAL_DRIVER_, SC_DO_NOTHING);
-        //sc_report_handler::set_actions(SC_FATAL, SC_DISPLAY | SC_THROW);
-        //scc::init_logging(syscLogLut[log_level]);
-    //} else {
-      //  scc::init_logging();
-    //}
-    //instance = this;
 }
 
 void CLIParser::build() {
@@ -56,7 +46,7 @@ void CLIParser::build() {
             ("instances,i",         "Show only instances")
             ("header",              "Show header")
             ("preprocessing,p",     "preprocessing VCD")
-            ("stats,t",             "print the stats of VCD signals")
+            ("stats,a",             "print the stats of VCD signals")
             ("fullpath,u",          "Show full signal path")
             ("start,s",     po::value<double>()->default_value(0),      "Start time (default to 0)")
             ("end,e",       po::value<double>()->default_value(-1),         "End time (default to end of file/-1)")
@@ -69,9 +59,11 @@ void CLIParser::build() {
 
 CLIParser::~CLIParser() = default;
 CLIParser* CLIParser::getSingletonObject() {
-    //if(!instance) {
-    //    instance = new CLIParser(argc, char* argv[]);
-    //};
-    //return instance;
+/*
+    if(!instance) {
+        instance = new CLIParser(argc, char* argv[]);
+    };
+    return instance;
+*/
 };
 

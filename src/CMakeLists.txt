@@ -1,0 +1,46 @@
+cmake_minimum_required(VERSION 3.12)
+set    ( EXEC_NAME VCDTool )
+project( top_level )
+
+find_package(Boost REQUIRED COMPONENTS iostreams program_options regex timer system)
+
+message(STATUS " Library  - ${Boost_LIBRARIES}")
+message(STATUS " DIR  - ${Boost_INCLUDE_DIRS}")
+
+# build executable
+FILE(GLOB MyCSources *.cpp json/*.cpp)
+link_directories(${CMAKE_CURRENT_LIST_DIR}/../verilog-vcd-parser/build)
+add_executable(${PROJECT_NAME} ${MyCSources})
+#add_library(${PROJECT_NAME}  STATIC ${MyCSources})
+target_link_libraries( ${PROJECT_NAME} PUBLIC verilog-vcd-parser)
+target_link_libraries( ${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES} )
+# target_link_libraries( ${PROJECT_NAME} PUBLIC CONAN_PKG::yaml-cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../verilog-vcd-parser/build)
+target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/)
+link_directories(${CMAKE_CURRENT_LIST_DIR}/../verilog-vcd-parser/build)
+
+enable_testing()
+set (failRegex "ERROR") 
+set (passRegex "Information: Simulation done" "Information: Finished with 0 errors and " "success from compare script")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
+	include(CodeCoverage)
+	APPEND_COVERAGE_COMPILER_FLAGS()
+	set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O0")
+#   setup_target_for_coverage(test ${TEST_TARGET} coverage)
+endif()
+#set(COVERAGE_LCOV_EXCLUDES 'dir1/*' 'dir/2*')
+
+#install and doc steps
+#install(TARGETS       ${EXEC_NAME}
+#        RUNTIME       DESTINATION bin
+#        LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#        ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#)
+
+# install examples
+#INSTALL (FILES ${TOPLEVEL_DIR}/test/configs/CodaCache_1M_synth.csr.json         DESTINATION test/configs)
+#INSTALL (FILES ${TOPLEVEL_DIR}/test/STL/example.stl                             DESTINATION test/STL)
+# INSTALL (FILES ${Boost_LIBRARIES}       DESTINATION ${TOPLEVEL_DIR}/install/lib )
+

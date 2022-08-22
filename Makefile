@@ -12,13 +12,15 @@ VCD_SRC         ?= $(SRC_DIR)/VCDFile.cpp \
 VCD_PARSER        ?= $(BUILD_DIR)/vcd-parse
 
 VCDTOOL        ?= $(BUILD_DIR)/vcdtool
-VCDTOOL_SRC    ?= $(SRC_DIR)/vcdtool.cpp $(SRC_DIR)/CLIParser.cpp \
+VCDTOOL_SRC    ?= $(SRC_DIR)/vcdtool.cpp $(SRC_DIR)/CLIParser.cpp $(SRC_DIR)/json/jsoncpp.cpp \
 					$(SRC_DIR)/main.cpp 
 VCDTOOL_OBJ     = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(VCDTOOL_SRC))
 
 all : $(VCDTOOL)
 
 $(BUILD_DIR)/%.o : $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $^
+$(BUILD_DIR)/json/jsoncpp.o : $(SRC_DIR)/json/jsoncpp.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $^
 
 $(VCDTOOL) : $(VCDTOOL_OBJ)

@@ -11,7 +11,12 @@ go to build and do
 ./vcdtool -u --VCD ../test/my_db.vcd
 
 # todo
-change to cmake
+improve cmake
 make verilog-vcd-parser a subproject
 setting up tests
-add JSON for output formating
+remove histograms for hit and miss counters
+
+# clones (make submodule)
+ git clone git@github.com:ben-marchal/verilog...
+ git clone git@github.com:Arteris-IP/SystemC-Components.git
+  

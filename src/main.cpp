@@ -3,6 +3,8 @@
 #include "vcdtool.h"
 #include <vector>
 #include <boost/timer/timer.hpp>
+#include "json/json.h"
+
 using namespace boost::timer;
 /*!
 @brief Standalone test function to allow testing of the VCD file parser.
@@ -11,7 +13,7 @@ int main (int argc, char** argv)
 {
 
     CLIParser *CLISingleton = new CLIParser(argc, argv);
-  cpu_timer timer;
+    cpu_timer timer;
     std::string infile (CLISingleton->get<std::string>("VCD"));
     std::string outfile (infile);
     if (CLISingleton->is_set("preprocessing")) {
@@ -19,12 +21,13 @@ int main (int argc, char** argv)
         std::cout << "preprocessing of "  <<  infile << std::endl;
         clean_signal_names(infile, outfile);
         std::cout << timer.format() << '\n';
-      }
+    }
 
     if (!outfile.size()) {
         std::cout << "no file to parse; finishing up" << std::endl;
         return 0;
     };    
+    
     VCDFileParser parser;
     std::cout << "parsing of " << outfile << std::endl;
     VCDFile *trace = parser.parse_file(outfile);
@@ -50,13 +53,17 @@ int main (int argc, char** argv)
         }
         // Print out every signal in every scope.
         std::cout << "scope traversal of " << outfile << std::endl;
+        Json::Value root;
         if (outputdir.size()) {
             std::ofstream outp;
             outp.open(outputdir);
-            traverse_scope(std::string(""), trace, trace->root_scope, instances, fullpath, stats, filterVector, outp);
+            traverse_scope(std::string(""), trace, trace->root_scope, instances, fullpath, stats, filterVector, outp, root);
+            std::ofstream out(outputdir+"/stats.json", std::ofstream::out);
+            out << root << std::endl;
         }
         else {
-            traverse_scope(std::string(""), trace, trace->root_scope, instances, fullpath, stats, filterVector, std::cout);
+            traverse_scope(std::string(""), trace, trace->root_scope, instances, fullpath, stats, filterVector, std::cout, root);
+            std::cout << root << std::endl;
 
         }
         std::cout << "scope traversal done with time "<< timer.format();
