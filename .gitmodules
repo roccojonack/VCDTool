@@ -1,0 +1,3 @@
+[submodule "SystemC-Components"]
+	path = SystemC-Components
+	url = git@github.com:Arteris-IP/SystemC-Components.git

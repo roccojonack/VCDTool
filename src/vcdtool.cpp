@@ -65,7 +65,7 @@ void traverse_scope(std::string parent, VCDFile * trace, VCDScope * scope,
     if (fullpath) {
         if (foundScope) {
             if (stats)
-                print_stat_signals(trace, scope, local_parent, output, root[scope->name]);
+                print_stat_signals(trace, scope, local_parent, root[scope->name]);
             else
                 print_scope_signals(trace, scope, local_parent, output);
         }
@@ -75,7 +75,7 @@ void traverse_scope(std::string parent, VCDFile * trace, VCDScope * scope,
     }
 
     for (auto child : scope->children) {
-        if (parent.length())
+        if (scope->name)
             traverse_scope(local_parent, trace, child, instances, fullpath, stats, filterVector, output, root[scope->name]);
         else
             traverse_scope(local_parent, trace, child, instances, fullpath, stats, filterVector, output, root);
@@ -99,7 +99,7 @@ void print_scope_signals(VCDFile * trace, VCDScope * scope, std::string local_pa
     }
 };
 
-void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_parent, std::ostream& output, Json::Value& root)
+void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_parent, Json::Value& root)
 {
         std::regex cycle_counter_re("^(.*)(busy|idle|wait|running|EvictCounter|HitCounter|MissCounter|ValidCounter|WriteBackCounter|MrdReqs|mrd_skid_buffer_occupancy)");
         std::smatch m;
@@ -111,20 +111,15 @@ void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_par
             std::map<unsigned int, double> HistValues;
             VCDTime current_time = 0;
             VCDTime previous_time = 0;
+            VCDTime first_transition = 0;
+            VCDTime last_transition = 0;
             if (trace->get_signal_values(signal->hash)->size() < 2 ) continue; // print only values which toggle at least one time
-            output << "name:" << local_parent << "." << signal->reference;
             Json::Value json_tmp; 
             json_tmp["name"] = signal->reference;
             if (std::regex_search(signal->reference, m, cycle_counter_re))
-            {
+            { // those are values for which a historgram doesn't make sense as they are running counters
                     VCDValue *val = trace->get_signal_values(signal->hash)->back()->value;
                     json_tmp["max"] = convertVCDVector2uint(val);
-                    output << "\tmax:" << convertVCDVector2uint(val);
-                    output << "\tmin:0";
-                    output << "\thistogram:0/0";
-                    output << "\taverage:0";
-                    output << "\tkey:" << signal->hash;
-                    output << "\ttransitions:" << trace->get_signal_values(signal->hash)->size();
             }
             else
             {
@@ -132,6 +127,8 @@ void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_par
                     {
                         VCDValue *val = (*i)->value;
                         current_time = (*i)->time;
+                        if (first_transition==0) first_transition=(*i)->time;
+                        last_transition=(*i)->time;
                         if (Values.size())
                         {
                             WeightedValues.push_back(Values.back() * (current_time - previous_time));
@@ -158,8 +155,6 @@ void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_par
                     }
                     auto min_value = *std::min_element(Values.begin(), Values.end());
                     auto max_value = *std::max_element(Values.begin(), Values.end());
-                    output << "\tmax:" << max_value;
-                    output << "\tmin:" << min_value;
                     float average = accumulate(WeightedValues.begin(), WeightedValues.end(), 0) / end_time;
                     output << "\thistogram:";
                     Json::Value json_hist; 
@@ -167,18 +162,12 @@ void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_par
                     {
                         if (HistValues.find(i) != HistValues.end())
                         {
-                            output << i << "/" << HistValues[i] << ";";
                             std::string s = std::to_string(i);
                             json_hist[s] = HistValues[i];
                         }
-                        else
-                        {
-                            output << i << "/0;";
-                        }
                     }
-                    output << "\taverage:" << average;
-                    output << "\tkey:" << signal->hash
-                           << "\ttransitions:" << trace->get_signal_values(signal->hash)->size();
+                    json_tmp["first"] = first_transition;
+                    json_tmp["last"] = last_transition;
                     json_tmp["max"] = max_value;
                     json_tmp["min"] = min_value;
                     json_tmp["avg"] = average;
@@ -187,7 +176,6 @@ void print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_par
                     json_tmp["transitions"] = trace->get_signal_values(signal->hash)->size();
             };
             root.append(json_tmp);
-            output << std::endl;
         }
 };
 
