@@ -26,45 +26,33 @@ int main (int argc, char** argv)
     if (!outfile.size()) {
         std::cout << "no file to parse; finishing up" << std::endl;
         return 0;
-    };    
-    
+    };
     VCDFileParser parser;
     std::cout << "parsing of " << outfile << std::endl;
     VCDFile *trace = parser.parse_file(outfile);
     std::cout << "parsing of " << outfile << " done with time " << timer.format();
+    VCDAnalyzer VCDAnalyzer1(trace, CLISingleton);
 
-    bool instances = CLISingleton->is_set("instances");
-    bool fullpath  = CLISingleton->is_set("fullpath");
-    bool stats     = CLISingleton->is_set("stats");
     std::vector<std::string> filterVector;
     std::string file = CLISingleton->get<std::string>("file");
     std::string outputdir = CLISingleton->get<std::string>("outputdirectory");
     readFilter(file, filterVector);
-
-    if (trace) {
-        if (CLISingleton->is_set("header")) {
-            std::cout << "Version:       " << trace->version << std::endl;
-            std::cout << "Comment:       " << trace->comment << std::endl;
-            std::cout << "Date:          " << trace->date << std::endl;
-            std::cout << "Signal count:  " << trace->get_signals()->size() << std::endl;
-            std::cout << "Times Recorded:" << trace->get_timestamps()->size() << " from " << trace->get_timestamps()->front() << " to " << trace->get_timestamps()->back() << std::endl;
-            if (fullpath)
-                std::cout << "Hash\tToggles\tFull signal path\n";
-        }
-        // Print out every signal in every scope.
-        std::cout << "scope traversal of " << outfile << std::endl;
+    
+    if (trace)
+    {
         Json::Value root;
-        if (outputdir.size()) {
+ 
+        std::cout << "scope traversal of " << outfile << std::endl;
+        VCDAnalyzer1.start_analysis(filterVector, root);
+        if (outputdir.size())
+        {
             std::ofstream outp;
             outp.open(outputdir);
-            traverse_scope(std::string(""), trace, trace->root_scope, instances, fullpath, stats, filterVector, outp, root);
-            std::ofstream out(outputdir+"/stats.json", std::ofstream::out);
+            std::ofstream out(outputdir, std::ofstream::out);
             out << root << std::endl;
         }
         else {
-            traverse_scope(std::string(""), trace, trace->root_scope, instances, fullpath, stats, filterVector, std::cout, root);
             std::cout << root << std::endl;
-
         }
         std::cout << "scope traversal done with time "<< timer.format();
 
@@ -72,7 +60,9 @@ int main (int argc, char** argv)
 
         std::cout << "finishing up" << std::endl;
         return 0;
-    } else {
+    }
+    else
+    {
         std::cout << "Parse Failed." << std::endl;
         return 1;
     }

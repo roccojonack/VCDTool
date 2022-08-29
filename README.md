@@ -17,6 +17,10 @@ setting up tests
 remove histograms for hit and miss counters
 
 # clones (make submodule)
- git clone git@github.com:ben-marchal/verilog...
- git clone git@github.com:Arteris-IP/SystemC-Components.git
-  
+git clone --recursive git@github.com:roccojonack/VCDTool.git
+cd VCDTool
+setenv BOOST_ROOT /scratch/rocco/workarea/tools/boost_1_70_0-gcc-6.3.0-install
+setenv VCDPARSER_ROOT /scratch/rocco/workarea/tools/verilog-vcd-parser
+mkdir build; cd build
+cmake ..
+make -j

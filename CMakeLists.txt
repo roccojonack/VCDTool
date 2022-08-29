@@ -52,34 +52,34 @@ endif()
 set(CLANG_FORMAT_EXCLUDE_PATTERNS "/test/" "/osci-lib/" "/build/")
 find_package(ClangFormat)
 
-conan_check()
-conan_add_remote(NAME conan-center URL https://center.conan.io INDEX 0)
-conan_add_remote(NAME arteris URL http://conan.arteris.com:9300 INDEX 1)
+#conan_check()
+#conan_add_remote(NAME conan-center URL https://center.conan.io INDEX 0)
+#conan_add_remote(NAME arteris URL http://conan.arteris.com:9300 INDEX 1)
 
 # Boost on CentOS 7 quirks: the b2 of conan-center is build against a newer libstdc++ and therefore does not run
 # with the oooooold libs on CentOS 7. Therefore we build our own version of b2 if it is not there
-set(B2_META $ENV{HOME}/.conan/data/b2/4.5.0/_/_/metadata.json)
-if(DEFINED ENV{CONAN_USER_HOME})
-	set(B2_META $ENV{CONAN_USER_HOME}/.conan/data/b2/4.5.0/_/_/metadata.json)
-endif()
-if(NOT EXISTS ${B2_META})
-	conan_configure(REQUIRES b2/4.5.0)
-	conan_cmake_autodetect(settings)
-	conan_cmake_install(PATH_OR_REFERENCE . BUILD b2 SETTINGS ${settings})
-endif()
+#set(B2_META $ENV{HOME}/.conan/data/b2/4.5.0/_/_/metadata.json)
+#if(DEFINED ENV{CONAN_USER_HOME})
+#	set(B2_META $ENV{CONAN_USER_HOME}/.conan/data/b2/4.5.0/_/_/metadata.json)
+#endif()
+#if(NOT EXISTS ${B2_META})
+#	conan_configure(REQUIRES b2/4.5.0)
+#	conan_cmake_autodetect(settings)
+#	conan_cmake_install(PATH_OR_REFERENCE . BUILD b2 SETTINGS ${settings})
+#endif()
 # Boost on CentOS 7 quirks end
 
-conan_configure(REQUIRES boost/1.70.0 yaml-cpp/0.6.3  lz4/1.9.3 zlib/1.2.8
-                GENERATORS cmake
-                OPTIONS boost:without_stacktrace=True boost:fPIC=True boost:shared=False boost:header_only=False
-                )
+#conan_configure(REQUIRES boost/1.70.0 yaml-cpp/0.6.3  lz4/1.9.3 zlib/1.2.8
+#                GENERATORS cmake
+#                OPTIONS boost:without_stacktrace=True boost:fPIC=True boost:shared=False boost:header_only=False
+#                )
 
-if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-	conan_install(BUILD_TYPE Release)
-else()
-	conan_install()
-endif()
-conan_setup(TARGETS)
+#if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+#	conan_install(BUILD_TYPE Release)
+#else()
+#	conan_install()
+#endif()
+#conan_setup(TARGETS)
 
 set(Boost_NO_BOOST_CMAKE ON) #  Don't do a find_package in config mode before searching for a regular boost install.
 
