@@ -4,7 +4,11 @@
 #include <numeric>
 #include "json/json.h"
 #include <bitset>
+#include <iostream>
+#include <vector>
+#include <boost/algorithm/string.hpp>
 
+using namespace std;
 // converts a VCDValue into unsigned integer; error returns -1
 // a real value will be casted to unsigned integer!
 int convertVCDVector2uint(VCDValue *val)
@@ -62,10 +66,12 @@ void VCDAnalyzer::traverse_scope(std::string parent, VCDFile * trace, VCDScope *
     
     if (fullpath) {
         if (foundScope) {
-            if (stats)
-                print_stat_signals(trace, scope, local_parent, root[scope->name]);
+            if (stats) {
+                // std::cout << "entering Scope: " << local_parent << " " << scope->name << " " << tmp << std::endl;
+                print_stat_signals(trace, scope, local_parent);
+            }
             else
-                print_scope_signals(trace, scope, local_parent, root[scope->name]);
+                print_scope_signals(trace, scope, local_parent, root);
         }
         else {
             std::cout << "no match on Scope: " << local_parent << std::endl;
@@ -73,16 +79,17 @@ void VCDAnalyzer::traverse_scope(std::string parent, VCDFile * trace, VCDScope *
     }
 
     for (auto child : scope->children) {
-        if (scope->name.size())
+        //if ((scope->name).size())
             traverse_scope(local_parent, trace, child, instances, fullpath, stats, filterVector, root[scope->name]);
-        else
-            traverse_scope(local_parent, trace, child, instances, fullpath, stats, filterVector, root);
+        //else
+        //    traverse_scope(local_parent, trace, child, instances, fullpath, stats, filterVector, root);
     };
 };
 
 
 void VCDAnalyzer::print_scope_signals(VCDFile * trace, VCDScope * scope, std::string local_parent,  Json::Value& root)
 {
+    std::cout << "Scope: " << local_parent << std::endl;
     for(VCDSignal * signal : scope -> signals) {
         Json::Value json_tmp; 
         json_tmp["name"] = signal->reference;
@@ -101,13 +108,15 @@ void VCDAnalyzer::print_scope_signals(VCDFile * trace, VCDScope * scope, std::st
     }
 };
 
-void VCDAnalyzer::print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_parent, Json::Value& root)
+void VCDAnalyzer::print_stat_signals(VCDFile * trace, VCDScope * scope, std::string local_parent)
 {
-        std::regex cycle_counter_re("^(.*)(busy|idle|wait|running|EvictCounter|HitCounter|MissCounter|ValidCounter|WriteBackCounter|MrdReqs|mrd_skid_buffer_occupancy)");
+    // std::cout << "print_stat_signals on scope: " << local_parent << std::endl;
+        std::regex cycle_counter_re("^(.*)(clk_counter|busy|idle|wait|running|EvictCounter|HitCounter|MissCounter|CacheMiss|CacheAlloc|CacheAllocNoevict|ValidCounter|WriteBackCounter|MrdReqs|mrd_skid_buffer_occupancy)");
         std::smatch m;
         double end_time = trace->get_timestamps()->back();
         for (VCDSignal *signal : scope->signals)
         { // iterating over all signals in current scope
+            //std::cout << "print_stat_signals on signal: " << signal->reference << std::endl;
             std::vector<unsigned int> Values;
             std::vector<double> WeightedValues;
             std::map<unsigned int, double> HistValues;
@@ -118,6 +127,7 @@ void VCDAnalyzer::print_stat_signals(VCDFile * trace, VCDScope * scope, std::str
             if (trace->get_signal_values(signal->hash)->size() < 2 ) continue; // print only values which toggle at least one time
             Json::Value json_tmp; 
             json_tmp["name"] = signal->reference;
+            json_tmp["hierachy"] = local_parent;
             if (std::regex_search(signal->reference, m, cycle_counter_re))
             { // those are values for which a historgram doesn't make sense as they are running counters
                     VCDValue *val = trace->get_signal_values(signal->hash)->back()->value;
@@ -131,7 +141,7 @@ void VCDAnalyzer::print_stat_signals(VCDFile * trace, VCDScope * scope, std::str
                     current_time = (*i)->time;
                     if (first_transition==0) first_transition=(*i)->time;
                     last_transition=(*i)->time;
-                    if (Values.size())
+                    if (Values.size() && previous_time>0)
                     {
                         WeightedValues.push_back(Values.back() * (current_time - previous_time));
                         if (HistValues.find(Values.back()) != HistValues.end())
@@ -145,19 +155,11 @@ void VCDAnalyzer::print_stat_signals(VCDFile * trace, VCDScope * scope, std::str
                     }
                     previous_time = current_time;
                     Values.push_back(convertVCDVector2uint(val));
-                    WeightedValues.push_back(Values.back() * (end_time - previous_time));
-                    if (HistValues.find(Values.back()) != HistValues.end())
-                    {
-                        HistValues[Values.back()] += (end_time - previous_time);
-                    }
-                    else
-                    {
-                        HistValues[Values.back()] = (end_time - previous_time);
-                    }
                 }
                 auto min_value = *std::min_element(Values.begin(), Values.end());
                 auto max_value = *std::max_element(Values.begin(), Values.end());
-                float average = accumulate(WeightedValues.begin(), WeightedValues.end(), 0) / end_time;
+                float average = accumulate(WeightedValues.begin(), WeightedValues.end(), 0) / (last_transition-first_transition);
+                
                 Json::Value json_hist; 
                 for (auto i = min_value; i <= max_value; ++i)
                 {
@@ -176,7 +178,7 @@ void VCDAnalyzer::print_stat_signals(VCDFile * trace, VCDScope * scope, std::str
                 json_tmp["histogram"] = json_hist;
                 json_tmp["transitions"] = trace->get_signal_values(signal->hash)->size();
             };
-            root.append(json_tmp);
+            m_root.append(json_tmp);
         }
 };
 

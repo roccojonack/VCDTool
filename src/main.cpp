@@ -49,10 +49,10 @@ int main (int argc, char** argv)
             std::ofstream outp;
             outp.open(outputdir);
             std::ofstream out(outputdir, std::ofstream::out);
-            out << root << std::endl;
+            out << VCDAnalyzer1.m_root << std::endl;
         }
         else {
-            std::cout << root << std::endl;
+            std::cout << VCDAnalyzer1.m_root << std::endl;
         }
         std::cout << "scope traversal done with time "<< timer.format();
 
