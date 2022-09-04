@@ -22,7 +22,7 @@ link_directories($ENV{VCDPARSER_ROOT}/build)
 
 enable_testing()
 set (failRegex "ERROR") 
-set (passRegex "Information: Simulation done" "Information: Finished with 0 errors and " "success from compare script")
+set (passRegex "finishing up")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
 	include(CodeCoverage)
@@ -31,6 +31,42 @@ if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
 #   setup_target_for_coverage(test ${TEST_TARGET} coverage)
 endif()
 #set(COVERAGE_LCOV_EXCLUDES 'dir1/*' 'dir/2*')
+
+file(GLOB TEST_VCD "${CMAKE_SOURCE_DIR}/test/*.vcd")
+message("binary=" ${CMAKE_BINARY_DIR})
+foreach(TESTFILE ${TEST_VCD})
+    message("search dir for VCD tests =" ${TESTFILE})
+    add_test(NAME     VCD_${TESTFILE} 
+         COMMAND    ${CMAKE_BINARY_DIR}/src/${EXEC_NAME} --VCD ${TESTFILE} -u -a
+       WORKING_DIRECTORY  ${CMAKE_BINARY_DIR})
+    
+    set_tests_properties ( VCD_${TESTFILE}
+       PROPERTIES
+       FAIL_REGULAR_EXPRESSION "${failRegex}"
+    )
+    set_tests_properties ( VCD_${TESTFILE}
+       PROPERTIES
+       PASS_REGULAR_EXPRESSION "${passRegex}"
+   )
+endforeach()
+
+file(GLOB TEST_FC_VCD "${CMAKE_SOURCE_DIR}/test/fc/*.vcd")
+message("binary=" ${CMAKE_BINARY_DIR})
+foreach(TESTFILE ${TEST_FC_VCD})
+    message("search dir for VCD FC tests =" ${TESTFILE})
+    add_test(NAME     VCD_FC_${TESTFILE} 
+         COMMAND    ${CMAKE_BINARY_DIR}/src/${EXEC_NAME} --VCD ${TESTFILE} -p -u -a
+       WORKING_DIRECTORY  ${CMAKE_BINARY_DIR})
+    
+    set_tests_properties ( VCD_FC_${TESTFILE}
+       PROPERTIES
+       FAIL_REGULAR_EXPRESSION "${failRegex}"
+    )
+    set_tests_properties ( VCD_FC_${TESTFILE}
+       PROPERTIES
+       PASS_REGULAR_EXPRESSION "${passRegex}"
+   )
+endforeach()
 
 #install and doc steps
 install(TARGETS       ${EXEC_NAME}
