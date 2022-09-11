@@ -10,6 +10,10 @@ go to build and do
 ./vcdtool -h
 ./vcdtool -u --VCD ../test/my_db.vcd
 
+# testing Python
+python3 src/python/test.py -f ./test/config1.vcd -i test/infc.json -o my
+python3 src/python/test.py -f ./test/config.vcd -o my
+
 # todo
 improve cmake
 make verilog-vcd-parser a subproject
