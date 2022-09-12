@@ -1,0 +1,187 @@
+{
+	"clocks" : 
+	[
+		{
+			"frequency" : 1300000,
+			"name" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_"
+		},
+		{
+			"frequency" : 1300000,
+			"name" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_check_"
+		}
+	],
+	"interfaces" : 
+	[
+		{
+			"addr_width" : 49,
+			"agent" : "caiu0",
+			"chi_credit_count" : 15,
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"data_width" : 256,
+			"direction" : "in",
+			"id_width" : 10,
+			"interface" : "chi_b_slv_",
+			"link_credit_count" : 15,
+			"max_outstanding_snoop_tx" : 12,
+			"max_outstanding_tx" : 96,
+			"qos_width" : 4,
+			"stash_credit_count" : 4,
+			"type" : "CHI",
+			"unit" : "caiu0",
+			"user_width" : 0
+		},
+		{
+			"addr_width" : 49,
+			"agent" : "dii0",
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"data_width" : 128,
+			"direction" : "out",
+			"id_width" : 14,
+			"interface" : "axi4_mst_",
+			"max_outstanding_read_tx" : 8,
+			"max_outstanding_write_tx" : 16,
+			"qos_width" : 4,
+			"type" : "AXI4",
+			"unit" : "dii0",
+			"user_width" : 16
+		},
+		{
+			"addr_width" : 49,
+			"agent" : "dii1",
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"data_width" : 128,
+			"direction" : "out",
+			"id_width" : 14,
+			"interface" : "axi4_mst_",
+			"max_outstanding_read_tx" : 16,
+			"max_outstanding_write_tx" : 16,
+			"qos_width" : 4,
+			"type" : "AXI4",
+			"unit" : "dii1",
+			"user_width" : 16
+		},
+		{
+			"addr_width" : 49,
+			"agent" : "dmi0",
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"data_width" : 256,
+			"direction" : "out",
+			"id_width" : 14,
+			"interface" : "axi4_mst_",
+			"max_outstanding_read_tx" : 64,
+			"max_outstanding_write_tx" : 32,
+			"qos" : 
+			{
+				"read_reserved" : 8,
+				"write_reserved" : 8
+			},
+			"qos_width" : 4,
+			"smc" : 
+			{
+				"scratchpad" : true,
+				"sets" : 1024,
+				"ways" : 16
+			},
+			"type" : "AXI4",
+			"unit" : "dmi0",
+			"user_width" : 16
+		},
+		{
+			"addr_width" : 49,
+			"agent" : "ncaiu0",
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"data_width" : 128,
+			"direction" : "in",
+			"id_width" : 10,
+			"interface" : "acelitee_slv_",
+			"max_outstanding_tx" : 32,
+			"qos_width" : 4,
+			"type" : "ACELite",
+			"unit" : "ncaiu0",
+			"user_width" : 16
+		},
+		{
+			"addr_width" : 49,
+			"agent" : "ncaiu1",
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"data_width" : 128,
+			"direction" : "in",
+			"id_width" : 10,
+			"interface" : "acelitee_slv_",
+			"max_outstanding_tx" : 48,
+			"qos_width" : 4,
+			"type" : "ACELite",
+			"unit" : "ncaiu1",
+			"user_width" : 16
+		},
+		{
+			"addr_width" : 49,
+			"agent" : "ncaiu2",
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"data_width" : 128,
+			"direction" : "in",
+			"id_width" : 10,
+			"interface" : "acelitee_slv_",
+			"max_outstanding_tx" : 32,
+			"qos_width" : 4,
+			"type" : "ACELite",
+			"unit" : "ncaiu2",
+			"user_width" : 16
+		},
+		{
+			"addr_width" : 49,
+			"agent" : "ncaiu3",
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"data_width" : 128,
+			"direction" : "in",
+			"id_width" : 10,
+			"interface" : "acelitee_slv_",
+			"max_outstanding_tx" : 32,
+			"qos_width" : 4,
+			"type" : "ACELite",
+			"unit" : "ncaiu3",
+			"user_width" : 16
+		},
+		{
+			"addr_width" : 49,
+			"agent" : "ncaiu4",
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"data_width" : 128,
+			"direction" : "in",
+			"id_width" : 10,
+			"interface" : "acelitee_slv_",
+			"max_outstanding_tx" : 16,
+			"qos_width" : 4,
+			"type" : "ACELite",
+			"unit" : "ncaiu4",
+			"user_width" : 16
+		},
+		{
+			"addr_width" : 24,
+			"agent" : "sys_dii",
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"data_width" : 32,
+			"direction" : "out",
+			"id_width" : 4,
+			"interface" : "axi4_",
+			"max_outstanding_read_tx" : 4,
+			"max_outstanding_write_tx" : 4,
+			"qos_width" : 0,
+			"type" : "AXI4",
+			"unit" : "sys_dii",
+			"user_width" : 0
+		}
+	],
+	"name" : "hw_config_nxpauto",
+	"resets" : 
+	[
+		{
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_",
+			"name" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300__rst"
+		},
+		{
+			"clock" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_check_",
+			"name" : "clk_reg_1300_clk_dom_1300_clk_subdom_1300_check__rst"
+		}
+	]
+}
