@@ -15,8 +15,8 @@
 	},
 	"CAIU": {
 		"CCmdCredit": "level",
-		"ChiReqCount": "level",
-		"ChiReqLatency": "counter",
+		"ChiReqCount": "counter",
+		"ChiReqLatency": "level",
 		"NCCmdCredit": "level",
 		"OttCounter": "level",
 		"SttCounter": "level"

@@ -1,0 +1,14 @@
+{
+	"description": "contains all VCD stat values by unit in CodaCache",
+	"AIU": {
+		"wtt_outstanding_counter": "level",
+        "rtt_outstanding_counter": "level",
+        "hit_counter": "counter",
+        "miss_counter": "counter",
+        "evict_counter": "counter",
+        "valid_counter":"counter",
+        "sp_counter": "counter",
+		"Rst": "level",
+		"RstN": "level"
+	}
+}

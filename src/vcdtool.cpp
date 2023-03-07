@@ -143,10 +143,15 @@ void VCDAnalyzer::print_stat_signals(VCDFile *trace, VCDScope *scope, std::strin
         Json::Value json_tmp;
         json_tmp["name"] = signal->reference;
         json_tmp["hierachy"] = local_parent;
+        
         if (std::regex_search(signal->reference, m, cycle_counter_re))
         { // those are values for which a historgram doesn't make sense as they are running counters
             VCDValue *val = trace->get_signal_values(signal->hash)->back()->value;
             json_tmp["max"] = convertVCDVector2uint(val);
+            VCDValue *val1 = trace->get_signal_values(signal->hash)->front()->value;
+            json_tmp["min"] = convertVCDVector2uint(val1);
+            json_tmp["key"] = signal->hash;
+            json_tmp["transitions"] = trace->get_signal_values(signal->hash)->size();
         }
         else
         {
@@ -154,38 +159,46 @@ void VCDAnalyzer::print_stat_signals(VCDFile *trace, VCDScope *scope, std::strin
             {
                 VCDValue *val = (*i)->value;
                 current_time = (*i)->time;
-                if (first_transition == 0)
-                    first_transition = (*i)->time;
                 last_transition = (*i)->time;
-                if (Values.size() && previous_time > 0)
+                /*
+                if (HistValues.find(convertVCDVector2uint(val)) != HistValues.end())
+                    std::cout << "Test1:" << signal->reference << "/" << current_time << "/" << convertVCDVector2uint(val) << "/" << Values.back() << "/" << HistValues[convertVCDVector2uint(val)]<< std::endl;
+                else
+                    std::cout << "Test1:" << signal->reference << "/" << current_time << "/" << convertVCDVector2uint(val)  << std::endl;
+                */
+                if (Values.size())
                 {
                     WeightedValues.push_back(Values.back() * (current_time - previous_time));
                     if (HistValues.find(Values.back()) != HistValues.end())
-                    {
                         HistValues[Values.back()] += (current_time - previous_time);
-                    }
                     else
-                    {
                         HistValues[Values.back()] = (current_time - previous_time);
-                    }
                 }
                 previous_time = current_time;
                 Values.push_back(convertVCDVector2uint(val));
             }
+            if (LastTimeInVCD>last_transition) {
+                WeightedValues.push_back(Values.back() * (LastTimeInVCD - last_transition));
+                if (HistValues.find(Values.back()) != HistValues.end())
+                    HistValues[Values.back()] += (LastTimeInVCD-last_transition); 
+                else              
+                    HistValues[Values.back()] = (LastTimeInVCD-last_transition);               
+            }
             auto min_value = *std::min_element(Values.begin(), Values.end());
             auto max_value = *std::max_element(Values.begin(), Values.end());
-            float average = accumulate(WeightedValues.begin(), WeightedValues.end(), 0) / (last_transition - first_transition);
+            float average = accumulate(HistValues.begin(), HistValues.end(), 0, [] (double value, const std::map<unsigned int, double>::value_type& p) { return value + p.second; }) / LastTimeInVCD/ HistValues.size();
 
             Json::Value json_hist;
             for (auto i = min_value; i <= max_value; ++i)
             {
                 if (HistValues.find(i) != HistValues.end())
                 {
-                    std::string s = std::to_string(i);
-                    json_hist[s] = HistValues[i];
+                    // std::cout << "Test2:" << signal->reference << "/" << s << "/" << HistValues[i] << "/" << LastTimeInVCD << std::endl;
+                    json_hist[std::to_string(i)] = HistValues[i]*100/LastTimeInVCD;
                 }
             }
             json_tmp["first"] = first_transition;
+            json_tmp["firstVal"] = Values.front();
             json_tmp["last"] = last_transition;
             json_tmp["max"] = max_value;
             json_tmp["min"] = min_value;
@@ -194,8 +207,6 @@ void VCDAnalyzer::print_stat_signals(VCDFile *trace, VCDScope *scope, std::strin
             json_tmp["histogram"] = json_hist;
             json_tmp["transitions"] = trace->get_signal_values(signal->hash)->size();
         };
-        // std::vector<std::string> strs;
-        // boost::split(strs, "string to split", boost::is_any_of("."));
         m_root.append(json_tmp);
     }
 };

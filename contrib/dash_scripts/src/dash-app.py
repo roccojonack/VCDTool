@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 ##
 # -*- coding: utf-8 -*-
+import dash
 from dash import Dash, dcc, html, Input, Output, dash_table
 import plotly.graph_objs as go
 import glob
@@ -12,77 +13,45 @@ import time
 import json
 from optparse import OptionParser
 # from datetime import datetime
-
-def parse_csv(filename):
-    result = []
-    prog = re.compile(r'^lgto_.*')
-    with open(filename) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        for row in csv_reader:
-            if len(result) == 0:
-                for cell in row:
-                    result.append([cell])
-            else:
-                for idx, cell in enumerate(row):
-                    if len(cell) == 0:
-                        result[idx].append(0)
-                    else:
-                        result[idx].append(cell)
-    return result    
-
-def parse_tsv(filename):
-    result = {}
-    with open(filename) as tsv_file:
-        for line in tsv_file:
-            columns = line.split("\t")
-            for index, i in enumerate(columns):
-                vals = i.split(":")
-                if len(vals)>1:
-                    print(index, vals[0], vals[1])
-                    if vals[0] == "name":
-                        namevals = vals[1].split(".")
-                        if len(namevals) > 4:
-                            name = '.'.join(namevals[7:-1])
-                            signal = namevals[-1]
-                            # print(i, name, signal)
-                        if name not in result:
-                            result[name] = {}
-                        if signal not in result[name]:
-                            result[name][signal] = {}
-                    else:
-                        if vals[0] == "histogram":
-                            histvals = vals[1].split(";")
-                            result[name][signal][vals[0]] = {}
-                            for j in histvals:
-                                tmp = j.split("/")
-                                if len(tmp)==2:
-                                    result[name][signal][vals[0]][tmp[0]] = tmp[1]
-                        else:
-                            result[name][signal][vals[0]] = vals[1]
-    return result    
-    
+import logging
+logger = logging.getLogger(__name__)
+     
 def readJSONInfoFile(filename):
     if os.path.exists(filename):
-        with open(filename,"r") as read_file: JSonData = json.load(read_file)
-        #logger.info('JSON File in use: %s' %(filename))
+        with open(filename,"r") as read_file: 
+            JSonData = json.load(read_file)
+        logger.info('JSON File in use: %s' %(filename))
         return JSonData
     else:
-        #logger.error('User Error: JSON file %s doesn\'t exist??'%filename)
+        logger.error('User Error: JSON file %s doesn\'t exist??'%filename)
         sys.exit(0)
-
    
-def run_board():
-    
+def run_board(designJson):   
     file_name_VCD = options.filename_VCD
-    # file_name_sum = options.filename_sum
     Port      = options.port_number
     TestName  = options.test_name
     stat      = os.path.getmtime(file_name_VCD)
     TestTime  = time.ctime(stat)
-    print ("reading data on port %s from files %s"%(Port, file_name_VCD))
-    # data_sum = parse_csv(file_name_sum)
+    logger.info("reading data on port %s from files %s"%(Port, file_name_VCD))
     data_vcd = readJSONInfoFile(file_name_VCD)
-
+    module_list = []
+    filtered_module_list = []
+    module_data = {}
+    [module_list.append(value['hierachy']) for value in data_vcd if value['hierachy'] not in module_list]
+    for i in module_list:
+        if '.ndn1.' in i:
+            continue
+        if '.ndn2.' in i:
+            continue
+        if '.dn.' in i:
+            continue
+        for j in designJson['interfaces']:
+            if i.endswith(j['agent']):
+                filtered_module_list.append(i)
+    for value in data_vcd:
+        if value['hierachy'] not in module_data:
+            module_data[value['hierachy']] = []
+        module_data[value['hierachy']].append(value)
     app = dash.Dash(__name__)
     
     app.layout = html.Div(children=[
@@ -91,44 +60,99 @@ def run_board():
         html.Div(id='my-output'),
        
         dcc.Tabs([
-
             dcc.Tab(label='modules', children=[
-                dcc.Dropdown(
-                    [value for key, value in enumerate(data_vcd)], list(data_vcd.keys())[0], id="my-input"
-                ),
-                dcc.Graph(
-                    id='graph',
-                    figure={
-                        'data': [
-                            {
-                                'x': [i['name'] for i in data_vcd['caiu0']],
-                                'y': [i['max'] for i in data_vcd['caiu0']],
-                                'type': 'bar', 'name': 'max'
-                            },
-                            {
-                                'x': [i['name'] for i in data_vcd['caiu0']],
-                                'y':  [i['average'] for i in data_vcd['caiu0']],
-                                'type': 'bar', 'name': 'avg'
-                            },
-                            {
-                                'x': [i['name'] for i in data_vcd['caiu0']],
-                                'y': [i['min'] for i in data_vcd['caiu0']],
-                                'type': 'bar', 'name': 'min'
-                            },
-                         ],
-                        'layout': go.Layout(title='caiu0')
-                    }
-                )
+                dcc.Dropdown(filtered_module_list, filtered_module_list[0], id="my-input"),
+                dcc.Graph(id='updated-graph'),
+                dcc.Graph(id='updated-hist-graph'),
+                dcc.Graph(id='updated-pivot-graph')
             ]),
         ])
     ])
     
     @app.callback(
-        Output(component_id='my-output', component_property='children'),
+        Output(component_id='updated-graph', component_property='figure'),
         Input(component_id='my-input', component_property='value')
     )
-    def update_output_div(input_value):
-        return f'Output: ' + data_vcd[input_value][0]['name']
+    def update_figure(input_value):
+        updated_value = module_data[input_value]
+        logger.debug(input_value)
+        figure = go.Figure()
+        filtered_values = []
+        for i in updated_value:
+            if 'avg' not in i:
+                continue
+            filtered_values.append(i)
+            logger.debug(i)
+        figure.add_trace(go.Bar(x=[i['name'] for i in filtered_values], y=[i['max'] for i in filtered_values], name='max'))
+        figure.add_trace(go.Bar(x=[i['name'] for i in filtered_values], y=[i['avg'] for i in filtered_values], name='avg'))
+        figure.add_trace(go.Bar(x=[i['name'] for i in filtered_values], y=[i['min'] for i in filtered_values], name='min'))
+        return figure
+
+    @app.callback(
+        Output(component_id='updated-hist-graph', component_property='figure'),
+        Input(component_id='my-input', component_property='value')
+    )
+    def update_hist_figure(input_value):
+        updated_value = module_data[input_value]
+        logger.debug(input_value)
+        figure = go.Figure()
+        x_min = min([i['min'] for i in updated_value if 'histogram' in i])
+        x_max = max([i['max'] for i in updated_value if 'histogram' in i])
+        x_list = []
+        for i in range(x_min,x_max+2):
+            x_list.append(i)
+        for i in updated_value:
+            if 'histogram' not in i:
+                continue
+            if i['histogram'] is None:
+                continue
+            y_list = []
+            for j in range(int(i['max']+1)):
+                if str(j) in i['histogram'].keys():
+                    y_list.append(i['histogram'][str(j)])
+                else:
+                    y_list.append(0)
+            y_list.append(0)
+            figure.add_trace(go.Scatter(x=x_list, y=y_list, line_shape='hv',name=i['name']))
+        figure.update_xaxes(title_text="Values of counters as histogram")
+        figure.update_yaxes(title_text="Percentage of time")
+        return figure
+
+    @app.callback(
+        Output(component_id='updated-pivot-graph', component_property='figure'),
+        Input(component_id='my-input', component_property='value')
+    )
+    def update_hist_figure(input_value):
+        updated_value = module_data[input_value]
+        logger.debug(input_value)
+        figure = go.Figure()
+        x_min = min([i['min'] for i in updated_value if 'histogram' in i])
+        x_max = max([i['max'] for i in updated_value if 'histogram' in i])
+        x_list = []
+        for i in range(x_min,x_max+2):
+            x_list.append(i)
+        for i in updated_value:
+            if 'histogram' not in i:
+                continue
+            if i['histogram'] is None:
+                continue
+            y_list = []
+            running_value = 100
+            if i['firstVal']==i['max']:
+                for j in range(int(i['max']),int(i['min'])-1,-1):
+                    y_list.append(running_value)
+                    if str(j) in i['histogram'].keys():
+                        running_value-=i['histogram'][str(j)]
+            else:
+                for j in range(int(i['min']),int(i['max'])+1):
+                    y_list.append(running_value)
+                    if str(j) in i['histogram'].keys():
+                        running_value-=i['histogram'][str(j)]
+            y_list.append(0)       
+            figure.add_trace(go.Scatter(x=x_list, y=y_list, line_shape='hv',name=i['name']))
+        figure.update_xaxes(title_text="distribution of counter values")
+        figure.update_yaxes(title_text="Percentage of time")
+        return figure
 
     app.run_server(debug=True,port=Port)
 
@@ -145,7 +169,11 @@ if __name__ == '__main__':
     parser.add_option("-j", "--json", dest="jsonfile",default="",
                       help="nme of JSON file with analysis data", metavar="")
     (options, args) = parser.parse_args()
-    #if options.jsonfile:
-    #    run_jsonanalysis()
-    #else :
-    run_board()
+    designJson = {}
+    if options.jsonfile:
+        designJson = readJSONInfoFile(options.jsonfile)
+        for i in ["dce0", "dce1", "dce2"]:
+            elem = {}
+            elem['agent'] = i
+            designJson['interfaces'].append(elem)
+    run_board(designJson)

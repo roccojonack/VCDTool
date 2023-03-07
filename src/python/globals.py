@@ -1,3 +1,3 @@
 design_info = {}
-ncore_stats = {}
+stats = {}
 result = {}

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import sys
+import os
 from pyDigitalWaveTools.vcd.parser import VcdParser
 from optparse import OptionParser
 # from analysis import *           
@@ -16,13 +17,20 @@ def do_analysis(options):
     now = time.time()
     logger.info("parsing VCD took %.2f sec"%(now-start))
     start = now
-    if options.design_info:
-        globals.ncore_stats = reader.readJSONInfoFile(options.ncore_stat_info)
-        globals.design_info = reader.readJSONInfoFile(options.design_info)
-        now = time.time()
-        logger.info("reading JSON took %.2f sec"%(now-start))
-        start = now
-    reader.addSignals(data, "")
+    path = os.path.abspath(os.path.dirname(sys.argv[0]))
+    print (path)
+    if options.mode=="ncore":
+        globals.design_info = reader.readJSONInfoFile(path + "/../../test/ncore_stats.json")
+        if options.design_info:
+            globals.stats = reader.readJSONInfoFile(options.design_info)
+            now = time.time()
+            logger.info("reading JSON took %.2f sec"%(now-start))
+            start = now
+        reader.addNcoreSignals(data, "")
+    else:
+        globals.stats = reader.readJSONInfoFile(path + "/../../test/codacache_stats.json")
+        print (globals.stats)
+        reader.addCCSignals(data,"")
     now = time.time()
     logger.info("generating summary took %.2f sec"%(now-start))
     start = now
@@ -40,8 +48,10 @@ if __name__== "__main__":
                       help="read JSON file <filename> for additional information about design", metavar="FILE")
     parser.add_option("-o", "--outputfile", dest="outputfile",
                       help="output to JSON file <filename>", metavar="FILE")
-    parser.add_option("--NcoreStats", dest="ncore_stat_info", default="test/ncore_stats.json",
-                      help="read JSON file <filename> for Ncore statistics", metavar="FILE")
+    parser.add_option("--Stats", dest="stat_info", default="test/ncore_stats.json",
+                      help="read JSON file <filename> for statistics", metavar="FILE")
+    parser.add_option("-m", "--Mode", dest="mode", default="ncore",
+                      help="mode for interpreting VCD [codacache|ncore|flexnoc]", metavar="")
     parser.add_option("-d", "--debug", action="store_true", dest="debug", 
                       help="enable debugging output", metavar="")
     (options, args)  = parser.parse_args()
